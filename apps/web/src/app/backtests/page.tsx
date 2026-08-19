@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { MetricCard } from "@/components/Widgets";
 import {
   Area,
-  BarChart3,
+  Bar,
   CartesianGrid,
   ComposedChart,
   Line,
@@ -15,7 +15,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ArrowRight, Download, Layers, Play, RotateCcw } from "lucide-react";
+import { ArrowRight, BarChart3, Download, Layers, Play, RotateCcw } from "lucide-react";
 
 export default function BacktestsPage() {
   const [backtests, setBacktests] = useState<any[]>([]);
