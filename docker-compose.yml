@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with TimescaleDB Extension
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: quantara-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: quantara
+      POSTGRES_PASSWORD: quantara_secure_password
+      POSTGRES_DB: quantara_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quantara -d quantara_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Market State Cache, Distributed Locks & Event Streams
+  redis:
+    image: redis:7-alpine
+    container_name: quantara-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend API Gateway
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+    container_name: quantara-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://quantara:quantara_secure_password@postgres:5432/quantara_db
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: quantara-super-secret-jwt-key-2026
+      ENCRYPTION_KEY: quantara-default-secure-32-byte-key-2026
+      ENABLE_LIVE_TRADING: "false"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Next.js Trading Terminal Frontend
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: ../../infrastructure/docker/Dockerfile.web
+    container_name: quantara-web
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+  # Prometheus Observability Metrics Scraper
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: quantara-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+volumes:
+  postgres_data:
+  redis_data:
