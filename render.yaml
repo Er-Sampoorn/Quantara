@@ -1,25 +1,18 @@
-# Render.com Blueprint (Infrastructure as Code)
-# Deploy Quantara on Render with one click: https://render.com
+# Render.com 100% FREE Tier Blueprint (No Credit Card Required)
+# Configured with free SQLite database & in-memory event bus
 
 services:
-  # 1. FastAPI Backend API Service
+  # 1. FastAPI Backend API Service (Free Tier)
   - type: web
     name: quantara-api
     runtime: docker
     dockerfilePath: ./infrastructure/docker/Dockerfile.api
-    plan: starter
+    plan: free
     region: oregon
     healthCheckPath: /api/v1/system/health
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: quantara-postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: quantara-redis
-          property: connectionString
+        value: sqlite:///./quantara.db
       - key: JWT_SECRET
         generateValue: true
       - key: ENCRYPTION_KEY
@@ -27,36 +20,17 @@ services:
       - key: ENABLE_LIVE_TRADING
         value: "false"
 
-  # 2. Next.js Trading Terminal Frontend Web Service
+  # 2. Next.js Trading Terminal Frontend Web Service (Free Tier)
   - type: web
     name: quantara-web
     runtime: node
     rootDir: apps/web
     buildCommand: npm install && npm run build
     startCommand: npm start
-    plan: starter
+    plan: free
     region: oregon
     envVars:
       - key: NODE_VERSION
         value: 18.20.0
       - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: quantara-api
-          property: host
         value: https://quantara-api.onrender.com/api/v1
-
-# Managed Databases
-databases:
-  - name: quantara-postgres
-    databaseName: quantara_db
-    user: quantara
-    plan: starter
-    region: oregon
-
-# Managed Redis Key-Value Store
-redis:
-  - name: quantara-redis
-    plan: starter
-    region: oregon
-    maxmemoryPolicy: allkeys-lru
