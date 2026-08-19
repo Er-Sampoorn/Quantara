@@ -1,0 +1,9 @@
+{
+  "name": "quantara-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "python -m uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT",
+    "build": "pip install --upgrade pip && pip install -r requirements.txt"
+  }
+}
