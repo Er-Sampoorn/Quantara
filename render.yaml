@@ -1,16 +1,21 @@
 # Render.com 100% FREE Tier Blueprint (No Credit Card Required)
-# Configured with free SQLite database & in-memory event bus
+# Native Python 3.11 Runtime for API & Node.js for Web
 
 services:
   # 1. FastAPI Backend API Service (Free Tier)
   - type: web
     name: quantara-api
-    runtime: docker
-    dockerfilePath: ./infrastructure/docker/Dockerfile.api
+    runtime: python
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: python -m uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT
     plan: free
     region: oregon
     healthCheckPath: /api/v1/system/health
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+      - key: PYTHONPATH
+        value: .
       - key: DATABASE_URL
         value: sqlite:///./quantara.db
       - key: JWT_SECRET
@@ -33,4 +38,4 @@ services:
       - key: NODE_VERSION
         value: 18.20.0
       - key: NEXT_PUBLIC_API_URL
-        value: https://quantara-api.onrender.com/api/v1
+        value: https://quantara-8hn1.onrender.com/api/v1
