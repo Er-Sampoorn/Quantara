@@ -1,0 +1,1 @@
+# Quantara Web Frontend requirements fallback
